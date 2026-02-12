@@ -40,7 +40,7 @@ def analyser_modules(modules):
         'cout_moyen': 0,
         'temps_moyen': 0
     }
-
+gaga 
     # TODO 1 : Gérer le cas où le dictionnaire est vide
     # Dans ce cas, retourner stats tel quel
 

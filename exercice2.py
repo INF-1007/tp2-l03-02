@@ -48,6 +48,13 @@ def calculer_priorite(intervention):
 
     # TODO 2 : Calculer le score selon la formule
     #          Penser à convertir critique en 1/0 
+    if 'urgence' in intervention:
+        score += intervention.get("urgence") * 2
+    if 'duree' in intervention:
+        score += intervention.get("duree") 
+
+    if intervention.get('critique'):
+        score += 10
 
     return score
 
@@ -81,7 +88,26 @@ def trier_interventions(liste_interventions):
     # TODO 2 : Implémenter un tri stable décroissant
     # Astuce stabilité :
     # - si score_i == score_j, NE PAS échanger
+    
+    interventions = []
+    
+    liste_interventions_2 = liste_interventions.copy()
+    
+    while len(liste_interventions_2) != 0:
 
+        best_score = calculer_priorite(liste_interventions_2[0])
+        best_score_i = 0
+        for i in range(1, len(liste_interventions_2)):
+        
+            x = calculer_priorite(liste_interventions_2[i])
+
+            if best_score < x:
+                best_score = x
+                best_score_i = i
+
+        interventions.append(liste_interventions_2[best_score_i])
+        liste_interventions_2.pop(best_score_i)
+        
     return interventions
 
 
@@ -105,14 +131,28 @@ def estimer_temps_interventions(liste_triee):
             'temps_moyen': float
         }
     """
-    temps_stats = {
-        'temps_total': 0,
-        'temps_moyen': 0
-    }
+
 
     # TODO 1 : Calculer le temps total
     # TODO 2 : Calculer le temps moyen (0 si liste vide)
 
+    
+    temps_total = 0
+    nb_Duree = 0
+    for D in liste_triee:
+        nb_Duree += 1
+        if D["duree"] > 0:
+
+            temps_total += D["duree"] * 4
+    
+    if nb_Duree > 0:
+        temps_moyen = temps_total / nb_Duree
+    else:
+        temps_moyen = 0
+    temps_stats = {
+        'temps_total': temps_total,
+        'temps_moyen': temps_moyen
+    }
     return temps_stats
 
 
@@ -135,13 +175,22 @@ def identifier_interventions_urgentes(liste, seuil=30):
     Returns:
         list: liste des identifiants 'id' urgents
     """
-    urgentes = []
+
 
     # TODO :
     # Parcourir la liste
     #   - si urgence > seuil, ajouter l'id.
     # ⚠️ Si 'id' manquant, tu peux ignorer l'intervention ou ajouter None
     # (au choix, mais rester cohérent)
+
+    urgentes = []
+    for urg in liste:
+        if 'urgence' in urg:
+            if urg["urgence"] > seuil:
+            
+                urgentes.append(urg["id"])
+
+
 
     return urgentes
 
@@ -169,6 +218,6 @@ if __name__ == "__main__":
     temps = estimer_temps_interventions(tri)
     print("\nTemps :", temps)
 
-    urg = identifier_interventions_urgentes(interventions_test, seuil=30)
+    urg = identifier_interventions_urgentes(interventions_test)
     print("\nUrgentes :", urg)
 

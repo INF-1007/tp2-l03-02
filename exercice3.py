@@ -50,7 +50,7 @@ def verifier_ressources(ressources, besoin):
             - peut_faire = True si toutes les ressources sont suffisantes
             - manquantes = liste des ressources insuffisantes (noms)
     """
-    peut_faire = True
+    peut_faire = False
     manquantes = []
 
     # TODO :
@@ -58,7 +58,13 @@ def verifier_ressources(ressources, besoin):
     #   - si stock actuel < quantite requise :
     #         peut_faire = False
     #         mettre à jour la liste "manquantes"
-
+    for b in besoin:
+        if b in ressources:
+            if ressources[b] < besoin[b]:
+                peut_faire = True
+                manquantes.append(b)
+        else:
+            manquantes.append(b)
     return peut_faire, manquantes
 
 
@@ -88,6 +94,11 @@ def mettre_a_jour_ressources(ressources, besoin, cycles=1):
     #   - calculer la consommation
     #   - mettre à jour le dictionnaire "nouvelles"
     # (On suppose que les données fournies sont cohérentes; pas besoin de borner à 0)
+
+    for r in nouvelles:
+        if r in besoin:
+
+            nouvelles[r] -= 3 * besoin[r]
 
     return nouvelles
 
@@ -122,6 +133,9 @@ def generer_alertes_ressources(ressources, seuil=50):
     #   - si stock < seuil :
     #         calculer a_commander
     #         mettre à jour alertes
+    for r in ressources:
+        if ressources[r] < seuil:
+            alertes[r] = (ressources[r], niveau_cible - ressources[r])
 
     return alertes
 
@@ -155,6 +169,23 @@ def calculer_cycles_possibles(ressources, consommations):
     #   - une ressource est considérée valide si conso > 0
     #   - si aucune ressource valide (toutes conso==0), décider nb_cycles=0 
     #   - mettre à jour "possibles"
+    for a in consommations:
+        indice_boucle = 0
+        nb_cycle_p = 0
+        for r in ressources:
+            
+            if r in consommations[a]:
+                if consommations[a][r] > 0:
+
+                    if indice_boucle == 0:
+                        nb_cycle_p = ressources[r] // consommations[a][r]
+                        indice_boucle += 1
+
+                    elif nb_cycle_p >= ressources[r] // consommations[a][r]:
+                        nb_cycle_p = ressources[r] // consommations[a][r]
+                    
+        possibles[a] = nb_cycle_p
+
 
     return possibles
 
@@ -188,12 +219,35 @@ Returns:
     dict: {ressource: quantite_a_acheter}
     """
     achats = {}
-
+    dict_manque = {}
     # TODO 1 : Calculer les manques dans un dict manques = {}
     # TODO 2 : Trier les manques par ordre décroissant (utiliser la fonction sorted())
     # TODO 3 : Parcourir les ressources par priorité :
     #          - calculer la quantite max achetable
     #          - acheter la quantite requise et soustraire du budget
+      
+    for r in ressources:
+        if r in besoins_prevus:
+            dict_manque[r] = besoins_prevus[r] - ressources[r]
+
+    dict_manque_sort = dict(sorted(dict_manque.items(), key=lambda item: item[1], reverse=True))
+    print(dict_manque_sort)
+    
+    for m in dict_manque_sort:
+        
+        while dict_manque_sort[m] != 0:
+            if not COUTS_UNITAIRES[m] > budget:
+                if m in achats:
+
+                    achats[m] += 1
+                    budget -= 1 * COUTS_UNITAIRES[m]
+                    dict_manque_sort[m] -= 1
+                else:
+                    achats[m] = 1
+                    budget -= 1 * COUTS_UNITAIRES[m]
+                    dict_manque_sort[m] -= 1
+            else:
+                break
 
     return achats
 

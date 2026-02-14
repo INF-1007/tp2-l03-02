@@ -22,6 +22,7 @@ modules = {
 
 
 def analyser_modules(modules):
+    
     """
     Analyse les modules de la station.
 
@@ -35,12 +36,6 @@ def analyser_modules(modules):
             - 'temps_moyen' : float
     """
 
-    stats = {
-        'module_plus_critique': None,
-        'cout_moyen': 0,
-        'temps_moyen': 0
-    }
-gaga 
     # TODO 1 : Gérer le cas où le dictionnaire est vide
     # Dans ce cas, retourner stats tel quel
 
@@ -53,6 +48,38 @@ gaga
     # - cout_moyen = somme_couts / nombre_modules
     # - temps_moyen = somme_temps / nombre_modules
 
+    meilleur_ratio = 0
+    cout_moyen = 0
+    temps_moyen = 0
+    meilleur_ratio_str = None
+    nb_modules = 0
+
+    for i in modules:
+        nb_modules += 1
+        cout_moyen += modules[i][0]
+        temps_moyen += modules[i][1]
+        
+        if modules[i][1] == 0:
+            continue
+        else:
+            if meilleur_ratio < (modules[i][0] / modules[i][2]):
+                meilleur_ratio = (modules[i][0] / modules[i][2])
+                meilleur_ratio_str = i
+
+        
+        
+        
+    if nb_modules != 0:
+        temps_moyen = temps_moyen / nb_modules
+        cout_moyen = cout_moyen / nb_modules
+    else:
+        temps_moyen = 0
+        cout_moyen = 0
+    stats = {
+        'module_plus_critique': meilleur_ratio_str,
+        'cout_moyen': cout_moyen,
+        'temps_moyen': temps_moyen
+    }
     return stats
 
 # -------------------------------------------------------------------
@@ -81,6 +108,15 @@ def regrouper_modules_par_type(modules, types):
     #   - Créer la liste si elle n’existe pas encore
     # ⚠️ Ignorer silencieusement les modules sans type
 
+    for module in modules:
+        if module in types:
+            if types[module] != None:
+                if not types[module] in modules_par_type:
+
+                    modules_par_type[types[module]] = [module]
+                else:
+                    modules_par_type[types[module]].append(module)
+
     return modules_par_type
 
 # -------------------------------------------------------------------
@@ -89,6 +125,7 @@ def regrouper_modules_par_type(modules, types):
 
 
 def calculer_cout_total(modules, interventions):
+
     """
     Calcule le coût total de maintenance prévu.
 
@@ -107,6 +144,10 @@ def calculer_cout_total(modules, interventions):
     #   - Vérifier qu’il existe dans modules
     #   - Ajouter à cout_total le cout total de maintenance du module étant donné le nombre d'interventions
     # ⚠️ Ignorer les modules absents de modules
+
+    for m in interventions:
+        if m in modules:
+            cout_total += interventions[m] * modules[m][0]
 
     return cout_total
 

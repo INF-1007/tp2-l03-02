@@ -60,6 +60,27 @@ def analyser_rapport(texte, mots_cles):
     # TODO 4 : borner score entre 0 et 10 (min/max)
     # TODO 5 : retourner (score, mots_trouves)
 
+    text_min = texte.lower()
+    
+    for m in text_min:
+        if not ord(m) > 96 and ord(m) < 123 and ord(m) != 32:
+            text_min = text_min.replace(m, "")  
+
+    
+    text_min = text_min.split()
+    for mot in text_min:
+        if mot in mots_cles:
+            if not mot in mots_trouves:
+                mots_trouves.append(mot)
+                score += mots_cles[mot]
+            else:
+                score += mots_cles[mot]
+    if score > 10:
+        score = 10
+    elif score < 0:
+        score = 0
+    
+    
     return score, mots_trouves
 
 
@@ -93,6 +114,29 @@ def categoriser_rapports(rapports, mots_cles):
     #   - faire une analyse du rapport pour en tirer le score
     #   - mettre à jour "categories"
 
+    for p in rapports:
+        phrase_m = p.lower()
+        score_p = 5
+
+        for L in phrase_m:
+            if not ord(L) > 96 and ord(L) < 123 and ord(L) != 32:
+                phrase_m = phrase_m.replace(L, "")
+        phrase_m = phrase_m.split()
+
+        for m in phrase_m:
+            if m in mots_cles:
+                score_p += mots_cles[m]
+        
+        if score_p >= 7:
+            categories['positifs'].append((p, score_p))
+
+        elif score_p <= 3:
+            categories['negatifs'].append((p, score_p))
+        
+        else:
+            categories['neutres'].append((p, score_p))
+
+    
     return categories
 
 
@@ -120,6 +164,39 @@ def identifier_problemes(rapports_negatifs, mots_cles_negatifs):
     #   - compter les occurrences de chaque mot_negatif
     #   - incrémenter problemes[mot]
 
+    phrase_m = []
+
+    for mot in mots_cles_negatifs:
+        problemes[mot] = 0
+    
+    for p in rapports_negatifs:
+        print(p)
+        if type(p) == tuple:
+            
+            t = p[0]
+            for L in p[0]:
+                if not ord(L) > 96 and ord(L) < 123 and ord(L) != 32:
+                    t = t.replace(L, "")
+            t = t.lower()
+            phrase_m.append(t.split())
+        else:
+            
+
+            for L in p:
+                if not ord(L) > 96 and ord(L) < 123 and ord(L) != 32:
+                    p = p.replace(L, "")
+            p = p.lower()
+            phrase_m.append(p.split())
+      
+    
+
+    for i in range(len(phrase_m)):
+        for m in phrase_m[i]:
+
+            if m in mots_cles_negatifs:
+                problemes[m] += 1
+        
+    print(phrase_m)
     return problemes
 
 
@@ -153,7 +230,51 @@ def generer_rapport_global(categories, problemes):
 
     # TODO 1 : récupérer tous les scores et calculer la moyenne (gérer le cas avec 0 rapports)
     # TODO 2 : trouver les 3 problèmes les plus fréquents sans utiliser sorted(), un tri simple type “sélection des max” est suffisant.)
+    
+    rapport['nb_positifs'] = len(categories['positifs'])
+    rapport['nb_neutres'] = len(categories['neutres'])
+    rapport['nb_negatifs'] = len(categories['negatifs'])
 
+    score_t = 0
+    nombre_p = 0
+    for c in categories:
+        for p in categories[c]:
+            score_t += p[1]
+            nombre_p += 1
+
+    if nombre_p != 0:
+        rapport['score_moyen'] += score_t / nombre_p
+
+    else:
+        rapport['score_moyen'] = 0
+        return rapport
+   
+    problemes_2 = problemes.copy()
+
+    
+    if len(problemes_2) <= 3:
+        x = len(problemes_2)
+    else:
+        x = 3
+    while x != 0:
+        score_temporaire = None
+        m_temporaire = None
+
+        for m in problemes_2:
+
+            if score_temporaire != None:
+                
+                if score_temporaire < problemes_2[m]:
+                    score_temporaire = problemes_2[m]
+                    m_temporaire = m
+
+            else:
+                score_temporaire = problemes_2[m]
+                m_temporaire = m
+
+        rapport['top_problemes'].append(m_temporaire)
+        score_temporaire = problemes_2.pop(m_temporaire)
+        x -= 1
     return rapport
 
 
@@ -185,8 +306,30 @@ def calculer_tendance(historique_scores):
     # - Gérer les cas vides / 1 élément
     # - Couper en deux moitiés
     # - Comparer les moyennes
+    
+    if len(historique_scores) <= 0:
+        return 'stable'
+    moitier_1 = historique_scores[0: len(historique_scores) // 2 ]
+    moitier_2 = historique_scores[len(historique_scores) // 2 : len(historique_scores)]
 
+    moyen_1 = 0
+    moyen_2 = 0
+    for i in range(len(moitier_1)):
+        moyen_1 += moitier_1[i]
+        moyen_2 += moitier_2[i]
+    if len(moitier_1) > 0 and len(moitier_2) > 0:
+        moyen_1 /= len(moitier_1)
+        moyen_2 /= len(moitier_2)
+    else:
+        moyen_1 = 0
+        moyen_2 = 0
 
+    if moyen_1 < moyen_2:
+        return 'amelioration'
+    elif moyen_2 <moyen_1:
+        return 'degradation'
+    else:
+        return 'stable'
 # -------------------------------------------------------------
 # TESTS main
 # -------------------------------------------------------------
